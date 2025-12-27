@@ -2,24 +2,13 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RemixController;
-use Illuminate\Support\Facades\DB; // 👈 이 줄을 추가해야 합니다!
+use Illuminate\Support\Facades\DB;
+use App\Models\Genre;
 
 Route::get('/remixes', [RemixController::class, 'index']);
 
-Route::get('/test', function () {
-    try {
-        // DB 연결 테스트 
-        $firstGenre = DB::table('genres')->first();
+Route::post('/remixes/{id}/vote', [RemixController::class, 'vote']);
 
-        return response()->json([
-            'message' => 'Database connection is solid!',
-            'data' => $firstGenre,
-            'status' => 'success'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'DB Connection Failed',
-            'error' => $e->getMessage()
-        ], 500);
-    }
+Route::get('/genres', function() {
+    return Genre::all();
 });
