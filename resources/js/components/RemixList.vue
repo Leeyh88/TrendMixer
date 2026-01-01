@@ -2,6 +2,20 @@
   <div class="container mx-auto p-6">
     <h2 class="text-2xl font-extrabold text-gray-800 mb-8">최신 리믹스 차트</h2>
 
+    <div class="mb-6">
+      <div class="relative max-w-md">
+        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+      🔍
+    </span>
+        <input 
+      type="text"
+      v-model="searchQuery"
+      placeholder="곡 제목이나 아티스트 검색..."
+      class="block w-full pl-12 pr-4 py-3 border-none rounded-2xl bg-white shadow-md focus:ring-2 focus:ring-indigo-500 transition-all"
+    />
+      </div>
+    </div>
+    
     <div class="flex gap-2 mb-8 overflow-x-auto pb-2">
       <button 
         @click="selectedGenreId = null"
@@ -63,25 +77,41 @@
         ></iframe>
       </div>
     </div>
+
+    <div v-if="filteredRemixes.length === 0" class = "text-center py-20">
+      <p class="text-gray-400 text-lg">해당 장르의 리믹스가 아직 없네요. </p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'; // 1. computed 추가
+import { ref, onMounted, computed } from 'vue'; 
 import axios from 'axios';
 
 const remixes = ref([]);
-const genres = ref([]); // 장르 목록 데이터
+const genres = ref([]); 
 const selectedGenreId = ref(null); 
 const selectedVideoId = ref(null);
+const searchQuery = ref("");
 
-// 2. 필터링 로직 추가
+// 검색 & 필터링 로직
 const filteredRemixes = computed(() => {
-    if (!selectedGenreId.value) return remixes.value;
-    return remixes.value.filter(remix => remix.genre_id === selectedGenreId.value);
+  return remixes.value.filter(remix => {
+      // (1) 장르 매칭 확인
+      const isGenreMatch = !selectedGenreId.value || remix.genre_id === selectedGenreId.value;
+
+      // (2) 검색어 매칭 확인
+      const titleMatch = remix.title.toLowerCase().includes(searchQuery.value.toLowerCase());
+      const artistMatch = remix.music_track?.artist?.toLowerCase().includes(searchQuery.value.toLowerCase());
+      
+      const isSearchMatch = titleMatch || artistMatch;
+
+    return isGenreMatch && isSearchMatch;
+  });
+    
 });
 
-// 3. API 호출 시 장르도 같이 가져오기
+// API 호출 시 곡정보와 장르도 같이 가져오기
 const fetchData = async () => {
     const [remixRes, genreRes] = await Promise.all([
         axios.get('/api/remixes'),
@@ -91,6 +121,7 @@ const fetchData = async () => {
     genres.value = genreRes.data;
 };
 
+// 투표
 const handleVote = async (remix) => {
   try {
     const response = await axios.post(`/api/remixes/${remix.id}/vote`);
@@ -98,12 +129,24 @@ const handleVote = async (remix) => {
       remix.vote_count = response.data.new_count;
     }
   } catch (error) {
-    console.error("투표 실패:", error);
+    if (error.response) {
+      const status = error.response.status;
+      const message = error.response.data.message;
+
+      if (status == 401) {
+        alert("로그인이 필요한 서비스입니다. 로그인페이지로 이동합니다.");
+        window.location.href = '/login';
+      } else if (status == 400) {
+        alert(message);
+      } else {
+        console.error("네트워크 에러:", error);
+      }
+    }
   }
 }
 
 const openModal = (videoId) => { selectedVideoId.value = videoId; };
 const closeModal = () => { selectedVideoId.value = null; };
 
-onMounted(fetchData); // fetchRemixes 대신 fetchData 호출
+onMounted(fetchData); 
 </script>

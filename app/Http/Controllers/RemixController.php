@@ -15,11 +15,37 @@ class RemixController extends Controller
         return response()->json($remixes);
     }
     
-    public function vote($id) 
+    public function vote(Request $request, $id) 
     {
-        $remix = \App\Models\Remix::findOrFail($id);
-        $remix->increment('vote_count');
+        // 로그인체크
+        if (!auth()->check()) {
+            return response()->json(['success' => false, 'message' => '로그인이 필요합니다.'], 401);
+        }
 
-        return response()->json(['success' => true, 'new_count' => $remix->vote_count]);
+        $user = auth()->user();
+        $remix = Remix::findOrFail($id);
+
+        // 투표했는지 체크
+        $exists = \DB::table('votes')
+            ->where('user_id', $user->id)
+            ->where('remix_id', $id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['success' => false, 'message' => '이미 투표하셨습니다.'], 400);
+        }
+
+        // 투표 기록 및 카운트 증가 
+        \DB::transaction(function () use ($user, $remix) {
+            \DB::table('votes')->insert([
+                'user_id' => $user->id,
+                'remix_id' => $remix->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $remix->increment('vote_count');
+        });
+            
+        return response()->json(['success' => true, 'new_count' => $remix->fresh()->vote_count]);
     }
 }
