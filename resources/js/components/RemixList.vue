@@ -1,7 +1,6 @@
 <template>
   <div class="container mx-auto p-6">
-    <h2 class="text-2xl font-extrabold text-gray-800 mb-8">최신 리믹스 차트</h2>
-
+    
     <div class="mb-6">
       <div class="relative max-w-md">
         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">

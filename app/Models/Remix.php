@@ -36,4 +36,9 @@ class Remix extends Model
     {
         return $this->belongsTo(MusicTrack::class);
     }
+
+    public function user(): BelongsTo {
+        // Remix 테이블의 user_id를 기준으로 User테이블과 연결
+        return $this->belongsTo(User::class);
+    }
 }

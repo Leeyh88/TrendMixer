@@ -31,13 +31,26 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
+                                clav class="hidden space-x-8 sm:-my-px sm:s-10 sm:flex"
                             >
-                                <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
-                                >
-                                    Dashboard
+                                <NavLink :href="route('home')" :active="route().current('home')">
+                                    홈
+                                </NavLink>
+                                
+                                <NavLink :href="route('rankings')" :active="route().current('rankings')">
+                                    순위
+                                </NavLink>
+
+                                <NavLink :href="route('worldcup')" :active="route().current('worldcup')">
+                                    월드컵
+                                </NavLink>
+
+                                <NavLink :href="route('board')" :active="route().current('board')">
+                                    게시판
+                                </NavLink>
+
+                                <NavLink :href="route('trends')" :active="route().current('trends')">
+                                    핫트렌드
                                 </NavLink>
                             </div>
                         </div>
@@ -140,11 +153,20 @@ const showingNavigationDropdown = ref(false);
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard')"
-                        >
-                            Dashboard
+                        <ResponsiveNavLink :href="route('home')" :active="route().current('home')">
+                            홈
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('rankings')" :active="route().current('rankings')">
+                            순위
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('worldcup')" :active="route().current('worldcup')">
+                            월드컵
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('board')" :active="route().current('board')">
+                            게시판
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('trends')" :active="route().current('trends')">
+                            핫트렌드
                         </ResponsiveNavLink>
                     </div>
 
