@@ -48,5 +48,10 @@ class User extends Authenticatable
 
     public function remixes(): HasMany {
         return $this->hasMany(Remix::class);
+    } 
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
     }
 }

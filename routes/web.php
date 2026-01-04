@@ -3,6 +3,10 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ImageController;
+use App\Http\Controllers\PostLikeController;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Remix;
@@ -44,10 +48,16 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('worldcup');
 
-    // 3. 게시판
-    Route::get('/board', function () {
-        return Inertia::render('Board/Index');
-    })->name('board');
+    // 3. 게시판 전체 기능 (index, create, store, show 등) 자동 매핑
+    Route::resource('posts', PostController::class);
+    // 3-2 게시판 댓글 작성
+    Route::post('posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
+    // 3-3 게시판 댓글 삭제
+    Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    // 3-4 게시판 이미지 업로드
+    Route::post('/upload-image', [ImageController::class, 'store'])->name('image.upload');
+    // 3-5 게시판 좋아요
+    Route::post('/posts/{post}/like', [PostLikeController::class, 'store'])->name('posts.like')->middleware('auth');
 
     // 4. 핫 트렌드 (외부 API 연동 예정)
     Route::get('/trends', function () {

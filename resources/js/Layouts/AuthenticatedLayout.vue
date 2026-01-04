@@ -45,8 +45,8 @@ const showingNavigationDropdown = ref(false);
                                     월드컵
                                 </NavLink>
 
-                                <NavLink :href="route('board')" :active="route().current('board')">
-                                    게시판
+                                <NavLink :href="route('posts.index')" :active="route().current('posts.*')">
+                                    커뮤니티
                                 </NavLink>
 
                                 <NavLink :href="route('trends')" :active="route().current('trends')">
@@ -162,8 +162,8 @@ const showingNavigationDropdown = ref(false);
                         <ResponsiveNavLink :href="route('worldcup')" :active="route().current('worldcup')">
                             월드컵
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('board')" :active="route().current('board')">
-                            게시판
+                        <ResponsiveNavLink :href="route('posts.index')" :active="route().current('posts')">
+                            커뮤니티
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('trends')" :active="route().current('trends')">
                             핫트렌드
