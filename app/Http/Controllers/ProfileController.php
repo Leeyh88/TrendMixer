@@ -21,6 +21,23 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+
+            // 내가 쓴 게시글 최신 5개
+            'myPosts' => $request->user()->posts()
+            ->withCount(['comments', 'likes'])
+            ->latest()
+            ->take(5)
+            ->get(),
+
+            // 내가 좋아요 누른 게시글 (최신5개)
+            'likedPosts' => \App\Models\Post::whereHas('likes', function($q) use ($request) {
+                $q->where('user_id', $request->user()->id);
+            })
+            ->with(['user'])
+            ->withCount(['comments', 'likes'])
+            ->latest()
+            ->take(5)
+            ->get(),
         ]);
     }
 

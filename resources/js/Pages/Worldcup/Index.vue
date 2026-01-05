@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { onMounted, nextTick, ref, computed } from 'vue';
+import { onMounted, nextTick, ref, computed, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
     candidates: {
@@ -13,17 +13,25 @@ const props = defineProps({
 const page = usePage();
 const displayCandidates = computed(() => props.candidates || page.props.candidates || []);
 
-let players = [null, null];
+// 플레이어 상태 관리 (ref로 안전하게 관리)
+const players = ref([null, null]);
 const isMuted = ref([true, true]);
 const confirmingId = ref(null);
 
 const initYouTubePlayers = () => {
-    if (displayCandidates.value.length < 2) return;
+    if (!displayCandidates.value || displayCandidates.value.length < 2) return;
 
     displayCandidates.value.forEach((remix, index) => {
         const elementId = `player-${index}`;
-        if (document.getElementById(elementId)) {
-            players[index] = new window.YT.Player(elementId, {
+        const el = document.getElementById(elementId);
+        
+        if (el) {
+            // 기존 플레이어 파괴 (재진입 시 충돌 방지)
+            if (players.value[index]) {
+                try { players.value[index].destroy(); } catch (e) {}
+            }
+
+            players.value[index] = new window.YT.Player(elementId, {
                 videoId: remix.youtube_video_id,
                 playerVars: {
                     'autoplay': 1,
@@ -36,15 +44,6 @@ const initYouTubePlayers = () => {
                 events: {
                     'onReady': (event) => {
                         event.target.playVideo();
-                    },
-                    'onStateChange': (event) => {
-                        if (event.data === window.YT.PlayerState.PLAYING) {
-                            setTimeout(() => {
-                                if (event.target && typeof event.target.pauseVideo === 'function') {
-                                    event.target.pauseVideo();
-                                }
-                            }, 50000); 
-                        }
                     }
                 }
             });
@@ -65,42 +64,61 @@ onMounted(async () => {
     }
 });
 
-const askConfirm = (id) => {
-    confirmingId.value = id;
-};
+onBeforeUnmount(() => {
+    players.value.forEach(player => {
+        if (player && player.destroy) player.destroy();
+    });
+});
+
+const askConfirm = (id) => { confirmingId.value = id; };
+const cancelConfirm = () => { confirmingId.value = null; };
 
 const selectWinner = (remixId) => {
+    if (confirmingId.value !== null) return;
+
     router.post(route('worldcup.vote', { id: remixId }), {}, {
-        preserveScroll: true,
+        preserveState: false,
+        preserveScroll: false,
+        onStart: () => {
+            // 클릭 즉시 피드백을 주기 위해 선택된 아이디 저장 (애니메이션용)
+            confirmingId.value = remixId;
+        },
         onSuccess: () => {
+            // 서버에서 응답이 오면 스킵 기능처럼 페이지를 다시 불러와 다음 매칭 유도
+            // 만약 서버 컨트롤러에서 Redirect를 해준다면 이 코드는 없어도 되지만,
+            // 확실하게 하기 위해 추가할 수 있습니다.
+            confirmingId.value = null;
+        },
+        onError: () => {
+            confirmingId.value = null;
+            alert('투표 처리 중 오류가 발생했습니다.');
+        },
+        onFinish: () => {
             confirmingId.value = null;
         }
     });
 };
 
-// 스킵 기능: 단순히 페이지를 새로고침하여 새로운 랜덤 곡을 가져옴
 const skipMatch = () => {
     router.get(route('worldcup'), {}, { preserveScroll: false });
 };
 
-const cancelConfirm = () => {
-    confirmingId.value = null;
-};
-
 const toggleSound = (index) => {
-    if (!players[index]) return;
+    if (!players.value[index]) return;
+    
     if (isMuted.value[index]) {
-        players.forEach((player, i) => {
-            if (player && typeof player.mute === 'function') {
+        // 다른 모든 플레이어 음소거 후 현재만 켬
+        players.value.forEach((player, i) => {
+            if (player && player.mute) {
                 player.mute();
                 isMuted.value[i] = true;
             }
         });
-        players[index].unMute();
-        players[index].setVolume(50);
+        players.value[index].unMute();
+        players.value[index].setVolume(50);
         isMuted.value[index] = false;
     } else {
-        players[index].mute();
+        players.value[index].mute();
         isMuted.value[index] = true;
     }
 };
@@ -110,90 +128,94 @@ const toggleSound = (index) => {
     <Head title="월드컵" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                월드컵
-            </h2>
-        </template>
+        <div class="py-12">
+            <div class="max-w-4xl mx-auto px-6">
+                <div class="bg-[#F8FAFC] p-8 rounded-[2.5rem] shadow-sm border border-gray-200">
+                    <header class="mb-12 flex items-end justify-between gap-6 px-4">
+                        <div>
+                            <h1 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tighter uppercase">WORLD CUP</h1>
+                            <p class="text-gray-500 font-bold mt-1 sm:mt-2 uppercase tracking-widest text-[10px] sm:text-xs">DEFINE THE TREND</p>
+                        </div>
 
-        <div class="py-12 bg-gray-100 min-h-[calc(100vh-65px)] flex flex-col items-center justify-center">
-            <div class="max-w-[1200px] mx-auto px-4 w-full relative">
-                
-                <div class="flex flex-row w-full gap-6 mb-12">
-                    <div v-for="(remix, index) in displayCandidates" :key="remix.id" class="flex-1 min-w-0">
-                        <div class="bg-white rounded-[2rem] overflow-hidden shadow-md border border-gray-200 flex flex-col h-full transition-all hover:shadow-xl duration-300">
-                            
-                            <div class="relative aspect-video bg-black overflow-hidden">
-                                <div :id="`player-${index}`" class="w-full h-full pointer-events-none scale-[1.1]"></div>
-                            </div>
+                        <button @click="skipMatch" 
+                                class="inline-flex items-center px-4 sm:px-8 py-2.5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] sm:text-sm shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all group">
+                            <span class="mr-2 uppercase">SKIP</span>
+                            <svg xmlns="http://www.w3.org/2000/vue" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </header>
 
-                            <div class="p-8 text-center flex flex-col justify-between flex-grow">
-                                <div class="mb-6">
-                                    <h3 class="text-2xl font-black text-gray-900 mb-2 truncate">
-                                        {{ remix.title }}
-                                    </h3>
-                                    <p class="text-gray-500 font-bold">
-                                        {{ remix.music_track?.artist }} | {{ remix.genre?.name }}
-                                    </p>
+                    <div class="relative w-full">
+                        <div class="vs-circle-container absolute left-1/2 top-[35%] sm:top-[40%] -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
+                            <div class="relative flex items-center justify-center">
+                                <div class="absolute w-16 h-16 sm:w-24 h-24 bg-red-500/20 blur-2xl rounded-full"></div>
+                                <div class="vs-circle w-12 h-12 sm:w-20 sm:h-20 bg-gradient-to-br from-red-500 to-red-700 text-white rounded-full flex items-center justify-center font-black text-sm sm:text-2xl italic border-2 sm:border-4 border-white shadow-2xl">
+                                    VS
                                 </div>
+                            </div>
+                        </div>
 
-                                <div class="flex flex-row items-center justify-center gap-3 w-full min-h-[64px]">
-                                    <template v-if="confirmingId !== remix.id">
-                                        <button @click.stop="toggleSound(index)" 
-                                                class="flex-1 h-16 rounded-2xl border-2 flex items-center justify-center transition-all duration-200"
-                                                :class="isMuted[index] ? 'border-gray-200 bg-gray-50 text-gray-400' : 'border-indigo-200 bg-indigo-50 text-indigo-600 shadow-inner font-bold'">
-                                            <svg v-if="isMuted[index]" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                            </svg>
-                                            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6" />
-                                            </svg>
-                                        </button>
+                        <div class="flex flex-row gap-2 sm:gap-8 items-stretch overflow-hidden">
+                            <div v-for="(remix, index) in displayCandidates" :key="remix.id" class="flex-1 min-w-0">
+                                <div class="bg-white rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden border border-gray-300 flex flex-col h-full transition-all duration-500 group">
+                                    
+                                    <div class="relative aspect-video bg-black overflow-hidden">
+                                        <div :id="`player-${index}`" class="w-full h-full pointer-events-none scale-[1.05]"></div>
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                                    </div>
 
-                                        <button @click="askConfirm(remix.id)" 
-                                                class="flex-1 h-16 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-lg transition-all active:scale-95">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </button>
-                                    </template>
+                                    <div class="p-3 sm:p-10 text-center flex flex-col justify-between flex-grow">
+                                        <div class="mb-4 sm:mb-8">
+                                            <h3 class="text-sm sm:text-3xl font-black text-gray-900 mb-1 truncate">
+                                                {{ remix.title }}
+                                            </h3>
+                                            <p class="text-[9px] sm:text-sm text-gray-400 font-bold truncate">
+                                                {{ remix.music_track?.artist }}
+                                            </p>
+                                        </div>
 
-                                    <template v-else>
-                                        <button @click="cancelConfirm" 
-                                                class="flex-1 h-16 rounded-2xl border-2 border-gray-300 bg-white text-gray-700 font-bold hover:bg-gray-50 transition-all">
-                                            취소
-                                        </button>
-                                        <button @click="selectWinner(remix.id)" 
-                                                class="flex-1 h-16 rounded-2xl bg-red-600 text-white font-black text-lg shadow-lg animate-pulse transition-all">
-                                            확정!
-                                        </button>
-                                    </template>
+                                      <div class="flex flex-row items-center justify-center gap-2 sm:gap-4 w-full mt-auto">
+        
+        <button @click.stop="toggleSound(index)" 
+                class="flex-1 h-14 sm:h-16 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 flex items-center justify-center group/sound"
+                :class="isMuted[index] 
+                    ? 'border-gray-100 bg-white text-gray-300 hover:border-orange-200 hover:text-orange-500' 
+                    : 'border-orange-500 bg-orange-50 text-orange-600 shadow-inner'">
+            <svg v-if="isMuted[index]" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 sm:w-8 sm:h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.5a.75.75 0 01-.75-.75V9.75a.75.75 0 01.75-.75h2.25z" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 sm:w-8 sm:h-8 animate-pulse text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.5a.75.75 0 01-.75-.75V8.25a.75.75 0 01.75-.75h2.25z" />
+            </svg>
+        </button>
+
+        <button @click="selectWinner(remix.id)" 
+                :disabled="confirmingId !== null"
+                class="flex-1 h-14 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 text-white flex items-center justify-center gap-2 shadow-lg shadow-orange-200 hover:scale-105 active:scale-95 transition-all group/win relative overflow-hidden"
+                :class="confirmingId === remix.id ? 'brightness-75 cursor-not-allowed' : ''">
+            
+            <template v-if="confirmingId !== remix.id">
+                <span class="font-black text-xs sm:text-xl italic uppercase tracking-tighter">WINNER!</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 sm:w-7 sm:h-7 group-hover/win:animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+                </svg>
+            </template>
+            
+            <template v-else>
+                <div class="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+            </template>
+        </button>
+    </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
-
-                <div class="flex flex-col items-center gap-6 mt-4">
-                    <div class="relative flex items-center justify-center">
-                        <div style="position: absolute; width: 80px; height: 80px; background: rgba(239, 68, 68, 0.15); filter: blur(15px); border-radius: 50%;"></div>
-                        <div class="vs-circle" 
-                             style="position: relative; width: 60px; height: 60px; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Arial Black', sans-serif; font-size: 1.4rem; font-weight: 900; border: 4px solid white; box-shadow: 0 4px 15px rgba(185, 28, 28, 0.3); font-style: italic;">
-                            VS
-                        </div>
-                    </div>
-
-                    <button @click="skipMatch" 
-                            class="px-8 py-3 rounded-full border border-gray-300 bg-white text-gray-400 font-bold hover:bg-gray-50 hover:text-gray-600 transition-all shadow-sm flex items-center gap-2 group">
-                        <span class="text-sm px-1">스킵하기</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                        </svg>
-                    </button>
-                </div>
-
             </div>
-        </div>
+        </div>  
     </AuthenticatedLayout>
 </template>
 <style scoped>
@@ -203,7 +225,12 @@ const toggleSound = (index) => {
 
 @keyframes vs-float {
     0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-8px) scale(1.05); }
+    50% { transform: translateY(-5px) scale(1.1) rotate(5deg); }
+}
+
+/* 좁은 화면에서도 VS 아이콘 위치를 안정적으로 고정 */
+.vs-circle-container {
+    transition: all 0.3s ease;
 }
 
 :deep(iframe) {

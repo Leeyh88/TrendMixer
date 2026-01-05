@@ -36,19 +36,16 @@ const updatePassword = () => {
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Update Password
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span class="w-1.5 h-6 bg-indigo-600 rounded-full"></span>
+                비밀번호 수정
             </h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                Ensure your account is using a long, random password to stay
-                secure.
-            </p>
+            <p class="mt-1 text-sm text-gray-500 font-medium">비밀번호를 수정하세요.</p>
         </header>
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <div>
-                <InputLabel for="current_password" value="Current Password" />
+                <InputLabel for="current_password" value="현재 비밀번호" />
 
                 <TextInput
                     id="current_password"
@@ -66,7 +63,7 @@ const updatePassword = () => {
             </div>
 
             <div>
-                <InputLabel for="password" value="New Password" />
+                <InputLabel for="password" value="변경할 비밀번호" />
 
                 <TextInput
                     id="password"
@@ -83,7 +80,7 @@ const updatePassword = () => {
             <div>
                 <InputLabel
                     for="password_confirmation"
-                    value="Confirm Password"
+                    value="비밀번호 확인"
                 />
 
                 <TextInput
@@ -101,7 +98,12 @@ const updatePassword = () => {
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <button
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+                        :disabled="form.processing"
+                    >
+                        수정
+                    </button>
 
                 <Transition
                     enter-active-class="transition ease-in-out"
@@ -111,9 +113,9 @@ const updatePassword = () => {
                 >
                     <p
                         v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
+                        class="text-sm text-green-600"
                     >
-                        Saved.
+                        완료.
                     </p>
                 </Transition>
             </div>

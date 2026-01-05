@@ -41,7 +41,7 @@ const showingNavigationDropdown = ref(false);
                                     순위
                                 </NavLink>
 
-                                <NavLink :href="route('worldcup')" :active="route().current('worldcup')">
+                                <NavLink :href="route('worldcup.index')" :active="route().current('worldcup.index')">
                                     월드컵
                                 </NavLink>
 
@@ -51,6 +51,10 @@ const showingNavigationDropdown = ref(false);
 
                                 <NavLink :href="route('trends')" :active="route().current('trends')">
                                     핫트렌드
+                                </NavLink>
+
+                                <NavLink :href="route('remixes.index')" :active="route().current('remixes.index')">
+                                    리믹스
                                 </NavLink>
                             </div>
                         </div>
@@ -159,7 +163,7 @@ const showingNavigationDropdown = ref(false);
                         <ResponsiveNavLink :href="route('rankings')" :active="route().current('rankings')">
                             순위
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('worldcup')" :active="route().current('worldcup')">
+                        <ResponsiveNavLink :href="route('worldcup.index')" :active="route().current('worldcup.index')">
                             월드컵
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('posts.index')" :active="route().current('posts')">
@@ -167,6 +171,9 @@ const showingNavigationDropdown = ref(false);
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('trends')" :active="route().current('trends')">
                             핫트렌드
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('remixes.index')" :active="route().current('remixes.index')">
+                            리믹스
                         </ResponsiveNavLink>
                     </div>
 

@@ -25,13 +25,18 @@ const form = useForm({
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span class="w-1.5 h-6 bg-indigo-600 rounded-full"></span>
+                프로필 정보
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 font-medium">이름과 이메일을 수정하세요.</p>
+            <!-- <h2 class="text-lg font-medium text-gray-900">
                 Profile Information
             </h2>
 
             <p class="mt-1 text-sm text-gray-600">
                 Update your account's profile information and email address.
-            </p>
+            </p> -->
         </header>
 
         <form
@@ -39,7 +44,7 @@ const form = useForm({
             class="mt-6 space-y-6"
         >
             <div>
-                <InputLabel for="name" value="Name" />
+                <InputLabel for="name" value="이름" />
 
                 <TextInput
                     id="name"
@@ -91,7 +96,13 @@ const form = useForm({
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                    <button
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+                        :disabled="form.processing"
+                    >
+                        수정
+                    </button>
+                <!-- <PrimaryButton :disabled="form.processing">수정</PrimaryButton> -->
 
                 <Transition
                     enter-active-class="transition ease-in-out"
@@ -101,9 +112,9 @@ const form = useForm({
                 >
                     <p
                         v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
+                        class="text-sm text-green-600"
                     >
-                        Saved.
+                        완료
                     </p>
                 </Transition>
             </div>

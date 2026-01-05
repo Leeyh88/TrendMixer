@@ -16,16 +16,33 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="새 글 쓰기" />
+    <Head title="커뮤니티" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">커뮤니티 글쓰기</h2>
-        </template>
 
-        <div class="py-12 bg-gray-100 min-h-[calc(100vh-65px)]">
-            <div class="max-w-3xl mx-auto px-4">
-                <div class="bg-white rounded-[2rem] shadow-sm border border-gray-200 overflow-hidden">
+         <div class="py-12">
+            <div class="max-w-4xl mx-auto px-6">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-200">
+
+                <header class="mb-1 flex items-center justify-between"> 
+                    <div class="flex items-center gap-4">    
+                        <div>
+                            <h1 class="text-2xl font-black text-gray-900 leading-none">Post New Story</h1>
+                            <p class="text-sm text-gray-400 font-bold italic mt-1">Explore, Discuss, and Mix.</p>
+                        </div>
+                    </div>
+
+                    <Link 
+                        :href="route('posts.index')" 
+                        class="flex items-center gap-2 px-5 py-2.5 bg-gray-50 text-gray-500 rounded-xl font-black text-xs hover:bg-gray-100 hover:text-indigo-600 transition-all border border-gray-100 shadow-sm"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        BACK TO LIST
+                    </Link>
+                </header>
+                
                     <form @submit.prevent="submit" class="p-8 lg:p-12 space-y-6">
                         
                         <div>
