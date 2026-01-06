@@ -5,84 +5,102 @@ import { Head, useForm, Link } from '@inertiajs/vue3';
 
 const form = useForm({
     title: '',
-    category: 'general', // 기본값
+    category: 'general',
     content: '',
 });
 
 const submit = () => {
-    // route('posts.store')는 약속된 POST /posts 경로로 전송합니다.
     form.post(route('posts.store'));
 };
 </script>
 
 <template>
-    <Head title="커뮤니티" />
+    <Head title="새 글 작성" />
 
     <AuthenticatedLayout>
-
-         <div class="py-12">
+        <div class="py-12 bg-[#F8FAFC] min-h-screen">
             <div class="max-w-4xl mx-auto px-6">
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-200">
-
-                <header class="mb-1 flex items-center justify-between"> 
-                    <div class="flex items-center gap-4">    
-                        <div>
-                            <h1 class="text-2xl font-black text-gray-900 leading-none">Post New Story</h1>
-                            <p class="text-sm text-gray-400 font-bold italic mt-1">Explore, Discuss, and Mix.</p>
+                
+                <header class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-2">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-2 py-0.5 bg-indigo-600 text-white text-[10px] font-black rounded uppercase tracking-widest">Creator Studio</span>
                         </div>
+                        <h1 class="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none">Post New Story</h1>
+                        <p class="text-gray-400 font-bold mt-2 uppercase tracking-widest text-[10px]">Explore, Discuss, and Mix your insights.</p>
                     </div>
 
                     <Link 
                         :href="route('posts.index')" 
-                        class="flex items-center gap-2 px-5 py-2.5 bg-gray-50 text-gray-500 rounded-xl font-black text-xs hover:bg-gray-100 hover:text-indigo-600 transition-all border border-gray-100 shadow-sm"
+                        class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-400 rounded-2xl font-black text-xs hover:text-indigo-600 hover:border-indigo-100 transition-all border border-gray-100 shadow-sm uppercase tracking-widest group"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        BACK TO LIST
+                        Back to List
                     </Link>
                 </header>
-                
-                    <form @submit.prevent="submit" class="p-8 lg:p-12 space-y-6">
+
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+                    <form @submit.prevent="submit" class="p-8 lg:p-12 space-y-8">
                         
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">카테고리</label>
-                            <select v-model="form.category" 
-                                    class="w-full border-gray-300 rounded-2xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="general">자유게시판</option>
-                                <option value="recommend">리믹스 추천</option>
-                                <option value="question">질문/답변</option>
-                            </select>
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                            <div class="lg:col-span-1">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Category</label>
+                                <select v-model="form.category" 
+                                        class="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-600 transition-all cursor-pointer appearance-none">
+                                    <option value="general">자유게시판</option>
+                                    <option value="recommend">리믹스 추천</option>
+                                    <option value="question">질문/답변</option>
+                                </select>
+                            </div>
+
+                            <div class="lg:col-span-3">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Story Title</label>
+                                <input v-model="form.title" type="text" placeholder="트렌디한 제목을 입력해 주세요"
+                                       class="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm font-bold text-gray-900 placeholder:text-gray-300 focus:ring-2 focus:ring-indigo-600 transition-all" />
+                                <p v-if="form.errors.title" class="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase tracking-tight">{{ form.errors.title }}</p>
+                            </div>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">제목</label>
-                            <input v-model="form.title" type="text" placeholder="제목을 입력하세요"
-                                   class="w-full border-gray-300 rounded-2xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                            <p v-if="form.errors.title" class="text-red-500 text-xs mt-1">{{ form.errors.title }}</p>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Content</label>
+                            <div class="rounded-3xl overflow-hidden border border-gray-100 shadow-inner bg-gray-50/30">
+                                <Tiptap v-model="form.content" />
+                            </div>
+                            <p v-if="form.errors.content" class="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase tracking-tight">{{ form.errors.content }}</p>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">내용</label>
-                            <Tiptap v-model="form.content" />
-                            <!-- <textarea v-model="form.content" rows="12" placeholder="자유롭게 내용을 입력하세요"
-                                      class="w-full border-gray-300 rounded-2xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
-                            <p v-if="form.errors.content" class="text-red-500 text-xs mt-1">{{ form.errors.content }}</p> -->
-                        </div>
-
-                        <div class="flex items-center justify-end gap-4 pt-4">
-                            <Link :href="route('posts.index')" class="text-gray-500 font-bold hover:text-gray-700 transition-colors">
-                                취소
+                        <div class="flex items-center justify-end gap-6 pt-6 border-t border-gray-50">
+                            <Link :href="route('posts.index')" class="text-xs font-black text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest">
+                                Cancel
                             </Link>
                             <button type="submit" 
                                     :disabled="form.processing"
-                                    class="px-10 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-black text-lg shadow-lg shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50">
-                                {{ form.processing ? '등록 중...' : '등록하기' }}
+                                    class="px-12 py-4 bg-gray-900 text-white rounded-2xl font-black text-sm shadow-xl shadow-gray-100 hover:bg-indigo-600 hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-3 uppercase tracking-widest">
+                                <span v-if="form.processing" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                {{ form.processing ? 'Publishing...' : 'Publish Story' }}
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <div class="mt-8 px-6 py-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 flex items-center gap-4">
+                    <span class="text-lg">💡</span>
+                    <p class="text-[11px] font-bold text-indigo-400 leading-relaxed uppercase tracking-tighter">
+                        이미지나 리믹스 링크를 포함하면 더 많은 <span class="text-indigo-600">Mixers</span>의 반응을 얻을 수 있습니다.
+                    </p>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+/* Tiptap 에디터 내부 스타일 최적화 (필요시) */
+:deep(.ProseMirror) {
+    min-height: 300px;
+    padding: 1.5rem;
+    outline: none;
+}
+</style>

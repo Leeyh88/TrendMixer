@@ -17,39 +17,63 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
+// 순위 페이지
+Route::get('/rankings', function (Request $request) {
+    // 필터 값 받기(기본 : 좋아요)
+    $sort = $request->query('sort','votes');
+    $column = ($sort === 'views') ? 'view_count' : 'vote_count';
+
+    $rankings = Remix::with(['user', 'genre', 'musicTrack'])
+        ->orderBy($column, 'desc')
+        ->take(10)
+        ->get();
+
+    return Inertia::render('Rankings/Index', [
+        'rankings' => $rankings,
+        'currentSort' => $sort
+    ]);
+})->name('rankings');
+
+// 월드컵 페이지
+Route::get('/worldcup', function () {
+    // 무작위로 2곡
+    $candidates = Remix::with(['musicTrack', 'genre'])
+        ->inRandomOrder()
+        ->take(2)
+        ->get();
+
+    return Inertia::render('Worldcup/Index', [
+        'candidates' => $candidates
+    ]);
+})->name('worldcup.index');
+
+// 게시판 전체 기능 (index, create, store, show 등) 자동 매핑
+Route::resource('posts', PostController::class);
+
+// 핫 트렌드 (외부 API 연동 예정)
+Route::get('/trends', function () {
+    // 샘플데이터로 차트 전송 (나중에 api)
+    $charts = [
+        'spotify' => [
+            ['rank' => 1, 'title' => 'Ditto', 'artist' => 'NewJeans'],
+            ['rank' => 2, 'title' => 'OMG', 'artist' => 'NewJeans'],
+        ],
+        'youtube' => [
+            ['rank' => 1, 'title' => 'Seven', 'artist' => 'Jungkook'],
+        ]
+    ];
+
+    return Inertia::render('Trends/Index', [
+        'charts' => $charts
+    ]);
+})->name('trends');
+
+// 리믹스
+Route::get('/remixes', [RemixController::class, 'index'])->name('remixes.index');
+
 // 로그인한 사용자만 접근 가능한 메뉴들
 Route::middleware(['auth'])->group(function () {
-    // 1. 순위 페이지
-    Route::get('/rankings', function (Request $request) {
-        // 필터 값 받기(기본 : 좋아요)
-        $sort = $request->query('sort','votes');
-        $column = ($sort === 'views') ? 'view_count' : 'vote_count';
-
-        $rankings = Remix::with(['user', 'genre', 'musicTrack'])
-            ->orderBy($column, 'desc')
-            ->take(10)
-            ->get();
-
-        return Inertia::render('Rankings/Index', [
-            'rankings' => $rankings,
-            'currentSort' => $sort
-        ]);
-    })->name('rankings');
-
-    // 2. 월드컵 페이지
-    Route::get('/worldcup', function () {
-        // 무작위로 2곡
-        $candidates = Remix::with(['musicTrack', 'genre'])
-            ->inRandomOrder()
-            ->take(2)
-            ->get();
-
-        return Inertia::render('Worldcup/Index', [
-            'candidates' => $candidates
-        ]);
-    })->name('worldcup.index');
-
-     // 2-1. 투표(선택) 처리 로직
+     // 월드컵 투표(선택) 처리 로직
     Route::post('/worldcup/{id}/vote', function ($id) {
         // 1. 선택된 곡을 DB에서 찾습니다.
         $remix = Remix::findOrFail($id);
@@ -60,45 +84,18 @@ Route::middleware(['auth'])->group(function () {
         return back(); 
     })->name('worldcup.vote');
 
-    // 3. 게시판 전체 기능 (index, create, store, show 등) 자동 매핑
-    Route::resource('posts', PostController::class);
-    // 3-2 게시판 댓글 작성
+    // 게시판 댓글 작성
     Route::post('posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
-    // 3-3 게시판 댓글 삭제
+    // 게시판 댓글 삭제
     Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
-    // 3-4 게시판 이미지 업로드
+    // 게시판 이미지 업로드
     Route::post('/upload-image', [ImageController::class, 'store'])->name('image.upload');
-    // 3-5 게시판 좋아요
+    // 게시판 좋아요
     Route::post('/posts/{post}/like', [PostLikeController::class, 'store'])->name('posts.like')->middleware('auth');
 
-    // 4. 핫 트렌드 (외부 API 연동 예정)
-    Route::get('/trends', function () {
-        // 샘플데이터로 차트 전송 (나중에 api)
-        $charts = [
-            'spotify' => [
-                ['rank' => 1, 'title' => 'Ditto', 'artist' => 'NewJeans'],
-                ['rank' => 2, 'title' => 'OMG', 'artist' => 'NewJeans'],
-            ],
-            'youtube' => [
-                ['rank' => 1, 'title' => 'Seven', 'artist' => 'Jungkook'],
-            ]
-        ];
-
-        return Inertia::render('Trends/Index', [
-            'charts' => $charts
-        ]);
-    })->name('trends');
-
-    // 5. 리믹스
-    Route::get('/remixes', [RemixController::class, 'index'])->name('remixes.index');
+    
     Route::get('/remixes/create', [RemixController::class, 'create'])->name('remixes.create');
     Route::post('/remixes', [RemixController::class, 'store'])->name('remixes.store');
-   
-
-    // 대시보드
-    Route::get('/dashboard', function() {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
 
     // 프로필
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
