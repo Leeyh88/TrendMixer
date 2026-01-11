@@ -1,41 +1,53 @@
 <?php
-
+use App\Models\Genre;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\RemixController;
+use App\Http\Controllers\TrendsController;
+use App\Http\Controllers\MainController;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Remix;
 
 // 메인 페이지
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
+Route::get('/', [MainController::class, 'index'])->name('home');
 
 // 순위 페이지
 Route::get('/rankings', function (Request $request) {
-    // 필터 값 받기(기본 : 좋아요)
-    $sort = $request->query('sort','votes');
+    // 1. 정렬 기준 설정 (기존 로직 유지)
+    $sort = $request->query('sort', 'votes');
     $column = ($sort === 'views') ? 'view_count' : 'vote_count';
 
+    // 2. 실시간 통계 데이터 계산 (추가된 부분)
+    $stats = [
+        // 전체 리믹스 곡의 누적 승리(점수) 합계
+        'total_points' => number_format(Remix::sum('vote_count')),
+        // 현재 DB에 등록된 총 리믹스 곡 수
+        'total_remixes' => number_format(Remix::count()),
+    ];
+
+    // 3. 랭킹 데이터 조회
     $rankings = Remix::with(['user', 'genre', 'musicTrack'])
         ->orderBy($column, 'desc')
-        ->take(10)
+        ->take(20) // 10개는 조금 적을 수 있어 20개로 늘렸습니다.
         ->get();
 
     return Inertia::render('Rankings/Index', [
         'rankings' => $rankings,
-        'currentSort' => $sort
+        'currentSort' => $sort,
+        'stats' => $stats, // ✅ 프론트엔드로 통계 전달
+        // 만약 장르 필터나 검색 기능이 필요하다면 아래도 함께 보냅니다.
+        'genres' => Genre::all(), 
+        'filters' => $request->only(['sort'])
     ]);
 })->name('rankings');
 
-// 월드컵 페이지
-Route::get('/worldcup', function () {
+// 믹스매치 페이지
+Route::get('/mix-match', function () {
     // 무작위로 2곡
     $candidates = Remix::with(['musicTrack', 'genre'])
         ->inRandomOrder()
@@ -45,35 +57,24 @@ Route::get('/worldcup', function () {
     return Inertia::render('Worldcup/Index', [
         'candidates' => $candidates
     ]);
-})->name('worldcup.index');
+})->name('mixmatch');
 
-// 게시판 전체 기능 (index, create, store, show 등) 자동 매핑
-Route::resource('posts', PostController::class);
+// 게시판 (index, show ) 공개접근
+Route::get('posts', [PostController::class, 'index'])->name('posts.index');
+Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show')->where('post', '[0-9]+');
 
 // 핫 트렌드 (외부 API 연동 예정)
-Route::get('/trends', function () {
-    // 샘플데이터로 차트 전송 (나중에 api)
-    $charts = [
-        'spotify' => [
-            ['rank' => 1, 'title' => 'Ditto', 'artist' => 'NewJeans'],
-            ['rank' => 2, 'title' => 'OMG', 'artist' => 'NewJeans'],
-        ],
-        'youtube' => [
-            ['rank' => 1, 'title' => 'Seven', 'artist' => 'Jungkook'],
-        ]
-    ];
-
-    return Inertia::render('Trends/Index', [
-        'charts' => $charts
-    ]);
-})->name('trends');
+Route::get('/trends', [TrendsController::class, 'index'])->name('trends');
 
 // 리믹스
 Route::get('/remixes', [RemixController::class, 'index'])->name('remixes.index');
 
 // 로그인한 사용자만 접근 가능한 메뉴들
 Route::middleware(['auth'])->group(function () {
-     // 월드컵 투표(선택) 처리 로직
+    // 게시판 전체 기능 (index, create, store, show 등) 자동 매핑
+    Route::resource('posts', PostController::class)->except(['index','show']);
+
+     // 믹스매치 투표(선택) 처리 로직
     Route::post('/worldcup/{id}/vote', function ($id) {
         // 1. 선택된 곡을 DB에서 찾습니다.
         $remix = Remix::findOrFail($id);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use App\Models\Remix;
 
 class PostController extends Controller
 {
@@ -46,7 +47,28 @@ class PostController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Posts/Create');
+        return Inertia::render('Posts/Create', [
+            'remixes' => Remix::with('user:id,name') // 작성자 이름 포함
+                ->latest()
+                ->get([
+                    'id', 
+                    'user_id',         // user 관계를 위해 필요
+                    'title',           // 리믹스 포스트 제목
+                    'track_title',     // 원곡 제목
+                    'artist_name',     // 원곡 가수 이름
+                    'album_cover_url'
+                ])
+                ->map(function($remix) {
+                    return [
+                        'id' => $remix->id,
+                        'title' => $remix->title,
+                        'track_title' => $remix->track_title,
+                        'artist_name' => $remix->artist_name,
+                        'album_cover_url' => $remix->album_cover_url,
+                        'user_name' => $remix->user ? $remix->user->name : 'Unknown', // 작성자 이름 추출
+                    ];
+                }),
+        ]);
     }
 
     // 상세보기
@@ -61,6 +83,7 @@ class PostController extends Controller
         return Inertia::render('Posts/Show', [
             'post' => $post->load([
                 'user', 
+                'remix.user',
                 'comments' => function($query) {
                     $query->whereNull('parent_id') // 부모가 없는(최상위) 댓글만 1차로 가져옴
                         ->latest()               // 최신순 정렬
@@ -72,17 +95,16 @@ class PostController extends Controller
 
     public function store(Request $request)
     {
-        // 1. 데이터 검증 (필수 입력값 확인)
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'category' => 'required|string',
+            'remix_id' => 'nullable|exists:remixes,id', // 리믹스 ID 검증 추가
         ]);
 
-        // 2. 현재 로그인한 유저의 ID와 함께 저장
+        // DB에 remix_id를 포함하여 저장
         $request->user()->posts()->create($validated);
 
-        // 3. 목록으로 돌아가기
         return redirect()->route('posts.index')->with('message', '게시글이 성공적으로 등록되었습니다.');
     }
 
@@ -117,5 +139,19 @@ class PostController extends Controller
         $post->update($validated);
 
         return redirect()->route('posts.show', $post->id)->with('message', '글이 수정되었습니다.');
+    }
+
+    public function destroy(Post $post)
+    {
+        // 1. 본인 확인 (작성자 본인만 삭제 가능하도록)
+        if (auth()->id() !== $post->user_id) {
+            abort(403, '삭제 권한이 없습니다.');
+        }
+
+        // 2. 게시글 삭제
+        $post->delete();
+
+        // 3. 목록 페이지로 리다이렉트
+        return redirect()->route('posts.index')->with('message', '게시글이 삭제되었습니다.');
     }
 }

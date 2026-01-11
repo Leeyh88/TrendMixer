@@ -14,7 +14,7 @@ const showingNavigationDropdown = ref(false);
     <div>
         <div class="min-h-screen bg-gray-100">
             <nav
-                class="border-b border-gray-100 bg-white"
+                class="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md shadow-sm"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -24,7 +24,7 @@ const showingNavigationDropdown = ref(false);
                             <div class="flex shrink-0 items-center pr-2">
                                 <Link :href="route('home')" class="flex items-center group tracking-tighter">
                                     <span class="text-2xl font-black text-gray-900 group-hover:text-indigo-600 transition-all duration-300">
-                                        trend<span class="text-indigo-600 group-hover:text-gray-900">Mixer</span>
+                                        trend<span class="text-indigo-600 group-hover:text-gray-900">Vibe</span>
                                     </span>
                                     <span class="ml-1 w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse"></span>
                                 </Link>
@@ -42,8 +42,8 @@ const showingNavigationDropdown = ref(false);
                                     순위
                                 </NavLink>
 
-                                <NavLink :href="route('worldcup.index')" :active="route().current('worldcup.index')">
-                                    월드컵
+                                <NavLink :href="route('mixmatch')" :active="route().current('mixmatch')">
+                                    믹스매치
                                 </NavLink>
 
                                 <NavLink :href="route('posts.index')" :active="route().current('posts.*')">
@@ -145,8 +145,8 @@ const showingNavigationDropdown = ref(false);
                         <ResponsiveNavLink :href="route('rankings')" :active="route().current('rankings')">
                             순위
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('worldcup.index')" :active="route().current('worldcup.index')">
-                            월드컵
+                        <ResponsiveNavLink :href="route('mixmatch')" :active="route().current('mixmatch')">
+                            믹스매치
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('posts.index')" :active="route().current('posts')">
                             커뮤니티

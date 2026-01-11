@@ -120,6 +120,53 @@ const getCategoryName = (category) => {
                         </div>
                     </div>
 
+                    <div v-if="post.category === 'recommend' && post.remix" class="mb-12">
+    <div class="bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-100 border border-gray-800">
+        <div class="relative aspect-video w-full bg-black">
+            <iframe 
+                :src="`https://www.youtube.com/embed/${post.remix.youtube_video_id}?rel=0`" 
+                class="absolute inset-0 w-full h-full"
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen
+            ></iframe>
+        </div>
+        
+        <div class="p-6 sm:p-8 flex items-center justify-between bg-gradient-to-r from-gray-900 via-gray-800 to-indigo-950">
+            <div class="flex items-center gap-5">
+                <div class="relative flex-shrink-0">
+                    <img :src="post.remix.album_cover_url" class="w-16 h-16 rounded-2xl object-cover border border-white/10 shadow-2xl" />
+                    <div class="absolute -top-2 -right-2 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center border-2 border-gray-900">
+                        <svg class="w-3 h-3 text-white fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+                
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[9px] font-black rounded uppercase tracking-widest border border-indigo-500/30">{{ post.remix.user.name }}</span>
+                    </div>
+                    <h3 class="text-white font-black text-lg truncate leading-tight">{{ post.remix.title }}</h3>
+                    <p class="text-gray-400 text-[11px] font-bold uppercase tracking-tight truncate">
+                        {{ post.remix.artist_name }} — {{ post.remix.track_title }}
+                    </p>
+                </div>
+            </div>
+
+            <Link :href="route('remixes.index')" class="hidden md:flex items-center justify-center w-12 h-12 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all group">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+            </Link>
+        </div>
+    </div>
+    
+    <div class="mt-12 flex items-center gap-4">
+        <div class="flex-grow h-px bg-gray-100"></div>
+        <span class="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">Story Content</span>
+        <div class="flex-grow h-px bg-gray-100"></div>
+    </div>
+</div>
+
                     <div class="p-8 lg:p-14">
                         <div class="prose max-w-none text-gray-700 leading-[1.9] text-lg whitespace-pre-wrap font-medium" v-html="post.content"></div>
                     </div>

@@ -73,7 +73,7 @@ const toggleSound = (index) => {
 </script>
 
 <template>
-    <Head title="CHART CLASH" />
+    <Head title="믹스매치" />
 
     <AuthenticatedLayout>
         <div class="py-10 bg-[#0F1115] min-h-screen flex items-center">
@@ -83,8 +83,8 @@ const toggleSound = (index) => {
                     <div class="flex items-center gap-4">
                         <div class="w-1 h-10 bg-indigo-600 rounded-full"></div>
                         <div>
-                            <h1 class="text-3xl font-black text-white tracking-tighter uppercase italic">Chart Clash</h1>
-                            <p class="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">Round of 32 • Who is the trend?</p>
+                            <h1 class="text-3xl font-black text-white tracking-tighter uppercase italic">Mix Match</h1>
+                            <p class="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">Who is the trend?</p>
                         </div>
                     </div>
 
@@ -158,15 +158,7 @@ const toggleSound = (index) => {
                     </div>
                 </div>
 
-                <div class="mt-12 max-w-md mx-auto">
-                    <div class="flex items-center justify-between mb-2 px-1">
-                        <span class="text-[9px] font-black text-gray-600 uppercase tracking-widest">Progress</span>
-                        <span class="text-[9px] font-black text-indigo-500 uppercase">4 / 16</span>
-                    </div>
-                    <div class="w-full bg-gray-900 h-1 rounded-full overflow-hidden">
-                        <div class="bg-indigo-600 h-full w-[25%]"></div>
-                    </div>
-                </div>
+                <!-- s -->
 
             </div>
         </div>

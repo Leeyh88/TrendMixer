@@ -29,7 +29,7 @@ const submit = () => {
                     <div class="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
                     <Link href="/" class="inline-block">
                         <span class="text-3xl font-black text-gray-900 group-hover:text-indigo-600 transition-all duration-300">
-                            trend<span class="text-indigo-600 group-hover:text-gray-900">Mixer</span>
+                            trend<span class="text-indigo-600 group-hover:text-gray-900">Vibe</span>
                         </span>
                         <span class="ml-1 w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse"></span>
                     </Link>

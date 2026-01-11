@@ -9,7 +9,7 @@ class Post extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'content', 'category', 'user_id'];
+    protected $fillable = ['title', 'content', 'category', 'user_id','remix_id'];
     protected $appends = ['is_liked'];
 
     public function user()
@@ -24,6 +24,10 @@ class Post extends Model
     public function likes()
     {
         return $this->hasMany(Like::class);
+    }
+
+    public function remix() {
+        return $this->belongsTo(Remix::class);
     }
 
     // 현재 로그인한 유저가 좋아요를 눌렀는지 확인

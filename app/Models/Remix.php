@@ -9,6 +9,7 @@ class Remix extends Model
 {
     // 데이터 삽입 허용 컬럼
     protected $fillable = [
+        'user_id',
         'music_track_id', 
         'genre_id', 
         'title', 
@@ -16,7 +17,11 @@ class Remix extends Model
         'youtube_video_id', 
         'description',
         'view_count',
-        'vote_count'
+        'vote_count',
+        'track_title',       
+        'artist_name',      
+        'album_cover_url',   
+        'itunes_track_id',   
     ];
 
     /**
